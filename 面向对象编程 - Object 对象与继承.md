@@ -1,7 +1,5 @@
 # Object 对象与继承
 
-@(文档)[马克飞象,Markdown,JavaScript]
-
 通过原型链，对象的属性分成两种：自身的属性和继承的属性。JavaScript 语言在 `Object` 对象上面，提供了很多相关方法，来处理这两种不同的属性。
 
 
@@ -47,3 +45,47 @@ location.hasOwnProperty('valueOf');
 ```
 
 `in` 运算符常用于检查一个属性是否存在。
+
+如果要获得对象的所有可枚举属性，可以使用`for...in` 循环。
+
+``` javascript
+var o1 = { p1: 123 }
+var o2 = Object.create(o1, {
+	p2: {
+		value: 'abc',
+		enumerable: true
+	}
+})
+
+for (p in o2) {
+	console.log(p)
+}
+// p2
+// p1
+```
+
+### 4. 对象的拷贝
+
+如果要拷贝一个对象，需要做到下面两件事情。
+>1.确保拷贝后的对象，与原对象具有同样的 `prototype` 原型对象。
+>2.确保拷贝后的对象，与原对象具有同样的属性。
+
+下面就是根据上面两点，编写的对象拷贝的函数。
+
+``` javascript
+function copyObject (orig) {
+	var copy = Object.create(Object.getPrototypeOf(orig));
+	copyOwnPropertiesFrom(copy, orig);
+	return copy;
+}
+
+function copyOwnPropertiesFrom (target, source) {
+	Object
+	.getOwnPropertyNames(source)
+	.forEach(function(propKey) {
+		var desc = Object.getOwnPropertyDescriptor(source, propKey);
+		Object.defineProperty(target, propKey, desc);
+	});
+	return target;
+}
+```
