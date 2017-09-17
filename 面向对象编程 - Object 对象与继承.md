@@ -89,3 +89,8 @@ function copyOwnPropertiesFrom (target, source) {
 	return target;
 }
 ```
+
+
+
+> 本文[《JavaScript 标准参考教程（alpha）》](http://javascript.ruanyifeng.com)第四章[面向对象编程](http://javascript.ruanyifeng.com/#oop) 的 [ Object 对象与继承](http://javascript.ruanyifeng.com/oop/object.html)章节的学习笔记。
+
