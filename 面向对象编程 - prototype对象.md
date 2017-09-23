@@ -1,4 +1,4 @@
-# 面向对象编程
+# 面向对象编程 - prototype对象
 
 @(prototype)[构造函数][原型对象]
 
@@ -86,6 +86,39 @@ Animal.prototype.color; // white
 - 由于 `constructor` 属性定义在 `prototype` 对象上面，意味着可以被所有实例对象继承。
 - `constructor` 属性的作用，是分辨原型对象属于哪个构造函数。
 - 通过`name`属性可以从实例得到构造函数的名称。`XXXX.constructor.name`
+- 有了 `construct` 属性就可以从一个实例创建另一个实例了
+
+
+```javascript
+var cat3 = new cat1.constructor();
+```
+
+在实例方法中，调用自身的构造函数原型对象的方法创建新的实例成为可能。
+
+```javascript
+Constr.prototype.createCopy = function () {
+    return new this.constructor();
+}
+```
+
+避免覆盖原来的 `prototype` 属性，要么将 `constructor` 属性重新指向原来的构造函数，要么只在原型对象上添加方法，这样可以保证 `instanceof` 运算符不会失真。
+
+```javascript
+// 避免这种写法
+C.prototype = {
+    method1: function () {}
+}
+
+// 较好的写法
+C.prototype = {
+    constructor: C,
+  	method1: function () {}
+}
+
+// 更好的方式
+C.prototype.method1 = function () {}
+```
+
 
 
 ### 2. instanceof运算符
