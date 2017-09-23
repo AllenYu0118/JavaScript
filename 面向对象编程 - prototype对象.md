@@ -4,12 +4,71 @@
 
 ####  1.1 构造函数的缺点
 
-每创建一个实例对象都会生成新的属性，无法进行属性间的共享，浪费系统资源。
+JavaScript 通过构造函数生成新对象，因此构造函数可以视为对象的模板。实例对象的属性和方法可以定义在构造函数内部。
+
+```javascript
+function Cat (name, color) {
+    this.name = name;
+  	this.color = color;
+}
+var cat1 = new Cat('大毛', '白色');
+cat1.name; // 大毛
+cat1.color; // 白色
+```
+
+上面代码的 `Cat` 函数是一个构造函数，函数内部定义了 `name` 属性和 `color` 属性，所有实例对象都会生成这两个属性。但是，这样做是对系统资源的浪费，因为同一个构造函数生成的对象实例之间，无法共享属性。
+
+```javascript
+function Cat (name, color) {
+    this.name = name;
+  	this.color = color;
+  	this.meow = function () {
+        console.log('mew, mew, mew...');
+    }
+}
+var cat1 = new Cat('大毛', '白色');
+var cat2 = new Cat('二毛', '黑色');
+cat1.meow === cat2.meow; // false
+```
+
+上面的代码中， `cat1` 和 `cat2` 对象实例都来自同一个构造函数 `Cat` ，但是他们的 `meow` 方法却是不一样的，就是说，每新建一个对象实例，都会新建一个 `meow` 方法。这既没有必要，又浪费系统资源，因为所有的 `meow` 方法都是同样的行为，完全应该共享。
 
 
 #### 1.2 prototype属性的作用
 
-JavaScript 每个对象都有一个原型对象，只有 `null` 除外，如果实例对象本身就有某个属性或者方法，它就不会再取原型对象中寻找。
+JavaScript 的每个对象都继承另一个对象，后者称为“原型”（prototype）对象。只有 `null` 除外，它没有自己的原型对象。
+
+原型对象上的所有属性和方法，都能被派生对象共享。这就是 JavaScript 继承机制的基本设计。
+
+通过构造函数生成对象实例，会自动为实例对象分配原型对象。每个构造函数都有一个 `prototype` 属性，这个属性就是实例对象的原型对象。
+
+```javascript
+function Animal (name) {
+    this.name = name;
+}
+Animal.prototype.color = 'white';
+
+var cat1 = new Animal('大毛');
+var cat2 = new Animal('二毛');
+
+cat1.color // white
+cat2.color // white
+cat1.color === cat2.color // true
+```
+
+> 只有函数才有 `prototype` 属性，构造函数生成的实例对象没有 `prototype` 属性，但是有 `__proto__` 属性，指向的就是构造函数的 `prototype` 属性；
+
+实例对象的原型对象不是自身的属性，只要修改原型对象，变动就会立即体现在 **所有** 实例对象上。
+
+如果实例对象自身就有某个属性或方法，它就不会再去原型对象寻找这个属性或方法。
+
+```javascript
+cat1.color = 'black';
+cat2.color; // white
+Animal.prototype.color; // white
+```
+
+原型对象的作用，就是定义所有实例对象共享的属性和方法。这也是它被称为原型对象的原因，而实例对象可以视作从原型对象衍生出来的子对象。
 
 
 #### 1.3 原型链
@@ -20,7 +79,7 @@ JavaScript 每个对象都有一个原型对象，只有 `null` 除外，如果�
 
 	Object.getPrototypeOf(Object.prototype);
 	// null
-	
+
 #### 1.4 constructor 属性
 
 - `prototype` 默认有一个 `constructor` 属性，默认指向 `prototype` 对象所在的构造函数。
