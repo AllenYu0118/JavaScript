@@ -205,9 +205,267 @@ hello2(); // Hello
 
 ##### (1) 避免多层 this
 
+由于 `this` 的指向是不明确的，所以切勿在函数中包含多层的 `this` 。
+
+```javascript
+var o = {
+    f1: function () {
+        console.log(this);
+      	var f2 = function () {
+            console.log(this);
+        }();
+    }
+}
+o.f1();
+// Object 
+// window
+```
+
+上面代码中包含两层 `this` ，结果运行后，第一层指向该对象，第二层指向全局对象。
+
+实际执行的是下面的代码
+
+```javascript
+var f2 = function () {
+    console.log(this);
+}
+var o = {
+    f1: function () {
+        console.log(this);
+      	f2();
+    }
+}
+```
+
+一个解决方法是在第二层改用一个指向外层 `this` 的变量。
+
+```javascript
+var o = {
+    f1: function () {
+        console.log(this);
+      	var that = this;
+      	var f2 = function () {
+            console.log(that);
+        }(); 
+    }
+}
+o.f1()
+// Object
+// Object
+```
+
+上面的代码定义了变量 `that` ，固定指向外层 `this` ，然后在内层使用 `that` ，就不会发生 `this` 指向的改变。
+
+JavaScript 提供了严格模式，也可以硬性避免这种问题。在严格模式下，如果函数内部的 `this` 指向顶层对象，就会报错。
+
+``` javascript
+var counter = {
+    count: 0
+}
+counter.inc = function () {
+    'use strict'
+  	this.count++ 
+};
+var f = counter.inc;
+f(); // TypeError: Cannot read property 'count' of undefined
+```
+
+##### (2) 避免数组处理方法中的this
+
+数组的 `map` 和 `forEach` 方法，允许提供一个函数作为参数。这个函数内部不应该使用 `this` 。
+
+```javascript
+var o = {
+    v: 'hello',
+  	p: ['a1', 'a2'],
+  	f: this.p.forEach(function(item){
+        console.log(this.v + '' + item);
+    })
+}
+o.f();
+// undefined a1
+// undefined a2
+```
+
+上面的代码中， `forEach` 方法的回调函数中的 `this` ，其实指向的是 `window` 对象，因此取不到 `o.v` 的值。
+
+解决这个问题的方法和上面增加 `that` 中间变量的方法一样。
+
+另一种方法是将 `this` 当做 `forEach` 方法的第二个参数，固定它的运行环境。
+
+```javascript
+var o = {
+    v: 'hello',
+  	p: ['a1', 'a2'],
+  	f: this.p.forEach(function(item){
+        console.log(this.v + '' + item);
+    }, this)
+}
+o.f();
+// hello a1
+// hello a2
+```
+
+##### (3) 避免回调函数中的this
+
+回调函数的 `this` 往往会改变指向，最好避免使用。
+
+```javascript
+var o = new Object();
+o.f = function () {
+    console.log(this === o);
+}
+o.f(); // true
+
+// 对element绑定click事件
+element.onClick = function () {
+    o.f();
+}
+// false
+```
+
+以上对 `element` 绑定的 `click` 方法， 此时 `o.f` 中的 `this` 指向的是 `element` 
 
 
 
+#### 4. 绑定 this 的方法
+
+`this` 的动态切换，固然为JavaScript创造了巨大的灵活性，但也使得编程变得困难和模糊。有时，需要把 `this` 固定下来，避免出现意想不到的情况。JavaScript提供了 `call` 、 `apply` 、 `bind` 这三个方法，来切换/固定 `this` 的指向。
+
+##### 4.1 function.prototype.call()
+
+函数实例的 `call` 方法，可以指定函数内部的 `this` 的指向（即函数执行时所在的作用域），然后在所指定的作用域中，调用该函数。
+
+```javascript
+var obj = {};
+var f = function () {
+    return this;
+}
+f() === this; // true
+f.call(obj) === obj; // true
+```
+
+在上面的方法中，在全局环境运行函数 `f` 时， `this` 指向全局环境； `call` 方法可以改变 `this` 的指向，指定 `this` 指向对象 `obj` ，然后在对象 `obj` 的作用域中运行函数 `f` 。
+
+`call` 方法的参数应该是一个对象。如果参数为空、 `null` 和 `undefined` ，则默认传入全局对象。
+
+如果 `call` 方法的参数是一个原始值，那么这个原始值会自动转成对应的包装对象，然后传入 `call` 方法。
+
+```javascript
+var f = function () {
+    return this;
+}
+f.call(5); // Number {[[PrimitiveValue]]: 5}
+```
+
+上面的代码中， `call` 的参数是 `5` ，不是对象，会被自动转成包装对象（ `Number` 的实例 ），绑定 `f` 内部的 `this` 。
+
+`call` 方法还可以接受多个参数
+
+```javascript
+func.call(thisValue, arg1, arg2, ...)
+```
+
+`call` 的第一个参数就是 `this` 所要指向的对象，后面的参数则是函数调用时需要的参数。
+
+```javascript
+function add (a, b) {
+    return a + b;
+}
+add.call(this, 1, 2); // 3
+```
+
+`call` 方法的一个应用是调用对象的原生方法。
+
+```javascript
+var obj = {};
+obj.hasOwnProperty('toString'); // false
+
+// 覆盖掉继承的 hasOwnProperty 方法
+obj.hasOwnProperty = function () {
+    return true;
+}
+obj.hasOwnProperty('toString'); // true
+
+Object.prototype.hasOwnProperty(obj, 'toString'); // false
+```
+
+上面的代码中， `hasOwnProperty` 是 `obj` 对象继承的方法，如果这个方法一旦被覆盖，就不会得到正确结果。 `call` 方法可以解决这个问题， 它将 `hasOwnProperty` 方法的原始定义放到 `obj` 对象上执行，这样无论 `obj` 上有无同名方法，都不会影响结果。
+
+##### 4.2 function.prototype.apply()
+
+`apply` 方法与 `call` 方法类似，也是改变 `this` 的指向，然后再调用该函数。唯一的区别就是，它接收一个数组作为一个函数执行时的参数，使用格式如下。
+
+```javascript
+func.apply(thisValue, [arg1, arg2, arg3, ...])
+```
+
+`apply` 方法的第一个参数也是 `this` 所要指向的那个对象，如果设为 `null` 和 `undefined` ，则等同于指定全局对象。第二个参数则是一个数组，该数组的所有成员依次作为参数，传入原函数。原函数的参数，在 `call` 方法中必须一个个添加，但是在 `apply` 方法中，必须以数组形式添加。
+
+```javascript
+function f (x, y) {
+    console.log(x+y)
+}
+f.call(null,1,2);  // 3
+f.apply(null,[1,2]); // 3
+```
+
+上面的 `f` 函数本来接收两个参数，使用 `apply` 方法以后，就变成可以接受一个数组作为参数。
+
+利用这一点可以做一些有趣 的应用。
+
+###### (1) 找出数组中最大的元素
+
+JavaScript 不提供找出数组最大元素的函数。结合使用 `apply` 方法和 `Math.max` 方法，就可以返回数组的最大元素。
+
+```javascript
+var arr = [10, 4, 8, 12, 17, 24, 9];
+Math.max.apply(null, arr); // 24
+```
+
+###### (2) 将数组的空元素变成 undefined
+
+通过 `apply` 方法，利用 `Array` 构造函数将数组的空元素变成 undefined
+
+```javascript
+Array.apply(null, ['a', , 'b']);
+// ["a", undefined, "b"]
+```
+
+空元素与 `undefined` 的差别在于，数组的 `forEach` 方法会跳过空元素，但是不会跳过 `undefined` 。因此，遍历内部元素的时候，会得到不同的结果。
+
+```javascript
+var arr = ['a',, 'b'];
+function print(i) {
+    console.log(i);
+}
+a.forEach(print);
+Array.apply(null, arr).forEach(print);
+```
+
+###### (3) 转换类似数组的对象
+
+利用数组对象的 `slice` 方法，可以将一个类似数组对象转为真正的数组。
+
+```javascript
+Array.prototype.slice.apply({0:1,length:1})
+// [1]
+
+Array.prototype.slice.apply({0:1})
+// []
+
+Array.prototype.slice.apply({0:1,length:2})
+// [1, undefined]
+
+Array.prototype.slice.apply({length:1})
+// [undefined]
+```
+
+上面代码的 `apply` 方法的参数都是对象，但是返回结果都是数组，这就起到了将对象 转成数组的目的。从上面代码可以看出，这个方法起作用的前提，被处理的对象必须有 `length` 属性，以及相对等的数字键。
+
+##### function.prototype.bind()
+
+`bind` 方法用于将函数体内的 `this` 绑定到某个对象，然后返回一个新函数。
 
 
 
