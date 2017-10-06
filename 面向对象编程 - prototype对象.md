@@ -205,4 +205,12 @@ obj.getPrototypeOf(obj)
 
 前两种都不是很靠谱，建议使用第三种
 
+
+
+下面一张图是我对原型、构造函数、实例对象以及原型链的理解
+
+![](./prototype.png)
+
+
+
 > 本文来自阮一峰老师的[《JavaScript 标准参考教程（alpha）》](http://javascript.ruanyifeng.com)第四章[面向对象编程](http://javascript.ruanyifeng.com/#oop) 的 [ prototype 对象](http://javascript.ruanyifeng.com/oop/prototype.html)章节的学习笔记。
