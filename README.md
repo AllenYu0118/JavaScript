@@ -9,5 +9,5 @@
 - [x] `Object` 对象和继承
 - [x] 面向对象的编程模式 
 - [x] `prototype` 对象
-- [ ] `this` 关键字
+- [x] `this` 关键字
 
