@@ -11,3 +11,8 @@
 - [x] `prototype` 对象
 - [x] `this` 关键字
 
+
+#### Promise
+- [x] 构造函数实现
+- [x] then/all/race/resolve/reject/catch 方法实现
+
