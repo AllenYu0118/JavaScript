@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        html,body { height: 100%;}
+        .box {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 100px;
+            height: 100%;
+            color: #fff;
+            background-color:#ccc;
+        }
+    </style>
+</head>
+<body>
+    <div id="content" class="box"></div>
+    <script src="throttle.js"></script>
+    <script src="debounce.js"></script>
+    <script>
+        var num = 1;
+        var content = document.getElementById('content');
+
+        function count(a, b, c) {
+            content.innerHTML = num++;
+        };
+
+        count()
+
+        content.onmousemove = throttle(count, 1000, 2)
+    </script>
+</body>
+</html>
